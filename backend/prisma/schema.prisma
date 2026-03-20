@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(USER)
+  totalScore   Int      @default(0)
+  captures     Capture[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model ARPoint {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  description String?
+  targetIndex Int?
+  targetName  String?
+  modelUrl   String
+  posX       Float   @default(0)
+  posY       Float   @default(0)
+  posZ       Float   @default(0)
+  rotX       Float   @default(0)
+  rotY       Float   @default(0)
+  rotZ       Float   @default(0)
+  scaleX     Float   @default(1)
+  scaleY     Float   @default(1)
+  scaleZ     Float   @default(1)
+  points     Int      @default(1)
+  isActive   Boolean  @default(true)
+  createdBy  String?
+  captures   Capture[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Capture {
+  id             String   @id @default(uuid())
+  userId         String
+  arPointId      String
+  earnedPoints   Int
+  totalScoreAfter Int
+  capturedAt     DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id])
+  arPoint ARPoint @relation(fields: [arPointId], references: [id])
+
+  @@unique([userId, arPointId], name: "userId_arPointId")
+}
