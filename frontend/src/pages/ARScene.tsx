@@ -49,11 +49,14 @@ export default function ARScene() {
             headers: { "ngrok-skip-browser-warning": "true" },
             cache: "no-store",
           });
-          const ct = resp.headers.get("content-type") || "";
-          if (!resp.ok || !ct.includes("application")) {
+          if (!resp.ok) {
+            const ct = resp.headers.get("content-type") || "";
             throw new Error(`targets.mind status ${resp.status} ct=${ct}`);
           }
           const blob = await resp.blob();
+          if (blob.size === 0) {
+            throw new Error("targets.mind vazio");
+          }
           targetSrc = URL.createObjectURL(blob);
         } catch (fetchErr) {
           console.error("Erro baixando targets.mind", fetchErr);
@@ -69,6 +72,9 @@ export default function ARScene() {
         mindar = new MindARThree({
           container: containerRef.current!,
           imageTargetSrc: targetSrc,
+          uiLoading: "no",
+          uiScanning: "no",
+          uiError: "no",
         });
         const { renderer: r, scene: s, camera: c } = mindar;
         renderer = r;
@@ -149,7 +155,7 @@ export default function ARScene() {
         {error && <p className="text-sm text-red-300 mt-2">{error}</p>}
       </div>
       {!started ? (
-        <div className="w-full h-[70vh] rounded-2xl overflow-hidden bg-slate-900 flex items-center justify-center border border-slate-700">
+        <div className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-slate-900/40 flex items-center justify-center border border-slate-700">
           <button
             className="bg-primary text-white px-6 py-3 rounded-lg shadow-lg"
             onClick={async () => {
@@ -175,7 +181,7 @@ export default function ARScene() {
           </button>
         </div>
       ) : (
-        <div ref={containerRef} className="w-full h-[70vh] rounded-2xl overflow-hidden bg-black" />
+        <div ref={containerRef} className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-transparent" />
       )}
       <CaptureOverlay show={overlay.show} text={overlay.text} points={overlay.points} />
     </div>

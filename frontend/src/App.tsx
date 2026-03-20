@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { NavBar } from "./components/NavBar";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -11,8 +11,11 @@ import AdminEditPoint from "./pages/AdminEditPoint";
 import { ProtectedRoute, AdminRoute } from "./components/ProtectedRoute";
 
 function App() {
+  const location = useLocation();
+  const isARRoute = location.pathname === "/ar";
+
   return (
-    <div className="max-w-6xl mx-auto px-4 pb-8">
+    <div className={isARRoute ? "min-h-screen px-4 pb-4" : "max-w-6xl mx-auto px-4 pb-8"}>
       <NavBar />
       <Routes>
         <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
