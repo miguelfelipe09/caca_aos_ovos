@@ -1,6 +1,7 @@
 import { PrismaClient, ARPoint } from "@prisma/client";
 
 const prisma = new PrismaClient();
+const normalizeModelKey = (value?: string | null) => value?.trim().toLowerCase() || "";
 
 export const listPoints = async (userId?: string) => {
   const points = await prisma.aRPoint.findMany({
@@ -11,13 +12,21 @@ export const listPoints = async (userId?: string) => {
 
   const captured = await prisma.capture.findMany({
     where: { userId },
-    select: { arPointId: true },
+    include: {
+      arPoint: {
+        select: {
+          id: true,
+          modelUrl: true,
+        },
+      },
+    },
   });
   const capturedIds = new Set(captured.map((c) => c.arPointId));
+  const capturedModelKeys = new Set(captured.map((c) => normalizeModelKey(c.arPoint.modelUrl)));
 
   return points.map((p) => ({
     ...p,
-    captured: capturedIds.has(p.id),
+    captured: capturedIds.has(p.id) || capturedModelKeys.has(normalizeModelKey(p.modelUrl)),
   }));
 };
 

@@ -15,8 +15,16 @@ const prisma = new PrismaClient();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const distPath = path.resolve(__dirname, "../../frontend/dist");
+const frontendOrigin = process.env.FRONTEND_ORIGIN?.trim();
 
-app.use(cors());
+const corsOptions: cors.CorsOptions = {
+  origin: frontendOrigin || true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
+};
+
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 app.use(express.json());
 
 app.use("/auth", authRoutes);

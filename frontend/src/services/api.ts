@@ -11,7 +11,7 @@ const defaultHeaders: Record<string, string> = {
 };
 
 // Only send this header when requests actually go through ngrok.
-if (baseURL.includes("ngrok-free.app")) {
+if (baseURL.includes("ngrok-free.app") || baseURL.includes("ngrok-free.dev")) {
   defaultHeaders["ngrok-skip-browser-warning"] = "true";
 }
 

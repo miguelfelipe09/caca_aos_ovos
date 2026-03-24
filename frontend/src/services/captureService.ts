@@ -28,3 +28,13 @@ export const ranking = async () => {
   const res = await api.get("/captures/ranking");
   return res.data as { id: string; name: string; totalScore: number }[];
 };
+
+export const adjustScoreForTesting = async (delta: number) => {
+  const res = await api.post("/captures/admin/score", { delta });
+  return res.data as { id: string; name: string; totalScore: number };
+};
+
+export const resetProgressForTesting = async () => {
+  const res = await api.post("/captures/admin/reset");
+  return res.data as { id: string; name: string; totalScore: number } | null;
+};

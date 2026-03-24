@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
+const normalizeModelKey = (value?: string | null) => value?.trim().toLowerCase() || "";
 
 export const recordCapture = async ({
   userId,
@@ -22,6 +23,30 @@ export const recordCapture = async ({
       alreadyCaptured: true,
       earnedPoints: 0,
       totalScore: exists.totalScoreAfter,
+      captureName: point.name,
+    };
+  }
+
+  const userCaptures = await prisma.capture.findMany({
+    where: { userId },
+    include: {
+      arPoint: {
+        select: {
+          modelUrl: true,
+        },
+      },
+    },
+  });
+
+  const duplicateModelCapture = userCaptures.find(
+    (capture) => normalizeModelKey(capture.arPoint.modelUrl) === normalizeModelKey(point.modelUrl)
+  );
+
+  if (duplicateModelCapture) {
+    return {
+      alreadyCaptured: true,
+      earnedPoints: 0,
+      totalScore: duplicateModelCapture.totalScoreAfter,
       captureName: point.name,
     };
   }
@@ -62,5 +87,39 @@ export const ranking = async () => {
     select: { id: true, name: true, totalScore: true },
     orderBy: { totalScore: "desc" },
     take: 20,
+  });
+};
+
+export const adjustScoreForTesting = async (userId: string, delta: number) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, totalScore: true },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const nextScore = Math.max(0, user.totalScore + delta);
+
+  return prisma.user.update({
+    where: { id: userId },
+    data: { totalScore: nextScore },
+    select: { id: true, name: true, totalScore: true },
+  });
+};
+
+export const resetProgressForTesting = async (userId: string) => {
+  await prisma.$transaction([
+    prisma.capture.deleteMany({ where: { userId } }),
+    prisma.user.update({
+      where: { id: userId },
+      data: { totalScore: 0 },
+    }),
+  ]);
+
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true, name: true, totalScore: true },
   });
 };

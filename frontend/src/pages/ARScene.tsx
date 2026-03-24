@@ -3,10 +3,13 @@ import { ARPoint, listPoints } from "../services/pointsService";
 import { capturePoint } from "../services/captureService";
 import { useAuthStore } from "../store/authStore";
 import { CaptureOverlay } from "../components/CaptureOverlay";
+import { VictoryModal } from "../components/VictoryModal";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
 import { resolveAssetUrl } from "../utils/assetUrl";
+
+const VICTORY_SCORE = 8;
 
 export default function ARScene() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -22,10 +25,27 @@ export default function ARScene() {
   });
   const [visiblePoint, setVisiblePoint] = useState<ARPoint | null>(null);
   const [capturing, setCapturing] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
   const [capturedIds, setCapturedIds] = useState<Set<string>>(new Set());
   const capturedIdsRef = useRef<Set<string>>(new Set());
   const sceneMapRef = useRef<Map<string, THREE.Object3D>>(new Map());
   const { updateScore, user } = useAuthStore();
+
+  const victoryStorageKey = user ? `victory-modal-seen:${user.id}` : null;
+
+  const openVictoryModal = () => {
+    setShowVictoryModal(true);
+    if (victoryStorageKey) {
+      window.sessionStorage.setItem(victoryStorageKey, "true");
+    }
+  };
+
+  useEffect(() => {
+    if (!user || user.totalScore < VICTORY_SCORE || !victoryStorageKey) return;
+    if (window.sessionStorage.getItem(victoryStorageKey) === "true") return;
+    setShowVictoryModal(true);
+    window.sessionStorage.setItem(victoryStorageKey, "true");
+  }, [user, victoryStorageKey]);
 
   useEffect(() => {
     listPoints()
@@ -69,12 +89,12 @@ export default function ARScene() {
           targetSrc = URL.createObjectURL(blob);
         } catch (fetchErr) {
           console.error("Erro baixando targets.mind", fetchErr);
-          setError("Não foi possível baixar targets.mind (confira o túnel/arquivo).");
+          setError("N\u00e3o foi poss\u00edvel baixar targets.mind (confira o t\u00fanel/arquivo).");
           return;
         }
 
         if (!targetSrc) {
-          setError("targets.mind não disponível.");
+          setError("targets.mind n\u00e3o dispon\u00edvel.");
           return;
         }
 
@@ -147,7 +167,7 @@ export default function ARScene() {
         loop();
       } catch (e: any) {
         console.error(e);
-        setError("Não foi possível iniciar a câmera/AR. Verifique permissões e tente novamente.");
+        setError("N\u00e3o foi poss\u00edvel iniciar a c\u00e2mera/AR. Verifique permiss\u00f5es e tente novamente.");
       }
     })();
 
@@ -174,13 +194,16 @@ export default function ARScene() {
       setOverlay({
         show: true,
         points: res.earnedPoints,
-        text: res.alreadyCaptured ? "Já capturado" : "Capturado!",
+        text: res.alreadyCaptured ? "J\u00e1 capturado" : "Capturado!",
       });
+      if (!res.alreadyCaptured && res.totalScore >= VICTORY_SCORE) {
+        openVictoryModal();
+      }
       setTimeout(() => setOverlay((o) => ({ ...o, show: false })), 2000);
       setVisiblePoint(null);
     } catch (e) {
       console.error(e);
-      setError("Não foi possível registrar a captura. Tente novamente.");
+      setError("N\u00e3o foi poss\u00edvel registrar a captura. Tente novamente.");
     } finally {
       setCapturing(false);
     }
@@ -197,18 +220,17 @@ export default function ARScene() {
         </div>
       </div>
 
-      <div className="glass p-3 rounded-2xl mb-3">
-        <p className="text-sm text-slate-200">
-          Aponte a câmera para as imagens-alvo. Quando um robô estiver visível, o botão de captura aparece. Cada captura vale 1 ponto e não pode ser repetida.
-        </p>
-        {!started && <p className="text-sm text-amber-300 mt-2">Toque em "Iniciar AR" para liberar a câmera.</p>}
-        {error && <p className="text-sm text-red-300 mt-2">{error}</p>}
-        {modelErrors.length > 0 && (
-          <p className="text-sm text-amber-300 mt-2">
-            Modelos com erro: {modelErrors.join(", ")}
-          </p>
-        )}
-      </div>
+      {(error || modelErrors.length > 0) && (
+        <div className="glass p-3 rounded-2xl mb-3">
+          {error && <p className="text-sm text-red-300">{error}</p>}
+          {modelErrors.length > 0 && (
+            <p className={`text-sm text-amber-300 ${error ? "mt-2" : ""}`}>
+              Modelos com erro: {modelErrors.join(", ")}
+            </p>
+          )}
+        </div>
+      )}
+
       {!started ? (
         <div className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-slate-900/40 flex items-center justify-center border border-slate-700">
           <button
@@ -225,14 +247,14 @@ export default function ARScene() {
                 setStarted(true);
               } catch (e: any) {
                 console.error(e);
-                setError("Permita acesso à câmera para iniciar a AR.");
+                setError("Permita acesso \u00e0 c\u00e2mera para iniciar a AR.");
               } finally {
                 setRequesting(false);
               }
             }}
             disabled={points.length === 0 || requesting}
           >
-            {points.length === 0 ? "Carregando pontos..." : requesting ? "Solicitando câmera..." : "Iniciar AR"}
+            {points.length === 0 ? "Carregando pontos..." : requesting ? "Solicitando c\u00e2mera..." : "Iniciar AR"}
           </button>
         </div>
       ) : (
@@ -243,7 +265,7 @@ export default function ARScene() {
         <div className="flex flex-col gap-2 items-center">
           <div className="min-h-[3rem] px-4 py-2 rounded-xl bg-slate-900/70 backdrop-blur border border-slate-700 text-center pointer-events-auto">
             <p className="text-slate-200 text-sm">
-              {visiblePoint ? `Robô detectado: ${visiblePoint.name || visiblePoint.slug}` : "Nenhum robô na mira"}
+              {visiblePoint ? `Pokejoy detectado: ${visiblePoint.name || visiblePoint.slug}` : "Nenhum pokejoy na mira"}
             </p>
           </div>
           <button
@@ -254,15 +276,16 @@ export default function ARScene() {
             {capturing
               ? "Capturando..."
               : !visiblePoint
-                ? "Aguarde um robô"
+                ? "Aguarde um pokejoy"
                 : capturedIds.has(visiblePoint.id)
-                  ? "Já capturado"
-                  : "Capturar robô"}
+                  ? "J\u00e1 capturado"
+                  : "Capturar pokejoy"}
           </button>
         </div>
       </div>
 
       <CaptureOverlay show={overlay.show} text={overlay.text} points={overlay.points} />
+      <VictoryModal open={showVictoryModal} onClose={() => setShowVictoryModal(false)} />
     </div>
   );
 }

@@ -26,3 +26,30 @@ export const ranking = async (_req: AuthRequest, res: Response) => {
   const rank = await service.ranking();
   res.json(rank);
 };
+
+export const adjustScoreForTesting = async (req: AuthRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  const delta = Number(req.body?.delta ?? 0);
+  if (!Number.isFinite(delta)) {
+    return res.status(400).json({ message: "Invalid delta" });
+  }
+
+  try {
+    const user = await service.adjustScoreForTesting(req.user.id, delta);
+    res.json(user);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+export const resetProgressForTesting = async (req: AuthRequest, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const user = await service.resetProgressForTesting(req.user.id);
+    res.json(user);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};
