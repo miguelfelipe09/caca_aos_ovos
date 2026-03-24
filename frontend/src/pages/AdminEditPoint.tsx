@@ -85,6 +85,7 @@ export default function AdminEditPoint() {
       modelUrl,
       (gltf) => {
         const model = gltf.scene;
+        normalizeAndCenter(model, camera!);
         model.position.set(data.posX ?? 0, data.posY ?? 0, data.posZ ?? 0);
         model.rotation.set(data.rotX ?? 0, data.rotY ?? 0, data.rotZ ?? 0);
         model.scale.set(data.scaleX ?? 1, data.scaleY ?? 1, data.scaleZ ?? 1);
@@ -181,3 +182,4 @@ export default function AdminEditPoint() {
     </div>
   );
 }
+

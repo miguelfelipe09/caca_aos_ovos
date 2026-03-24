@@ -20,7 +20,12 @@ export default function ARScene() {
     points: 0,
     text: "",
   });
-  const { updateScore } = useAuthStore();
+  const [visiblePoint, setVisiblePoint] = useState<ARPoint | null>(null);
+  const [capturing, setCapturing] = useState(false);
+  const [capturedIds, setCapturedIds] = useState<Set<string>>(new Set());
+  const capturedIdsRef = useRef<Set<string>>(new Set());
+  const sceneMapRef = useRef<Map<string, THREE.Object3D>>(new Map());
+  const { updateScore, user } = useAuthStore();
 
   useEffect(() => {
     listPoints()
@@ -35,6 +40,7 @@ export default function ARScene() {
     if (!containerRef.current || points.length === 0 || !started) return;
     setError(null);
     setModelErrors([]);
+    sceneMapRef.current.clear();
     let stop = false;
     let mindar: any = null;
     let renderer: THREE.WebGLRenderer;
@@ -104,6 +110,7 @@ export default function ARScene() {
           gltf.scene.rotation.set(p.rotX, p.rotY, p.rotZ);
           gltf.scene.scale.set(p.scaleX, p.scaleY, p.scaleZ);
           anchor.group.add(gltf.scene);
+          sceneMapRef.current.set(p.id, gltf.scene);
           const mixer = gltf.animations.length ? new THREE.AnimationMixer(gltf.scene) : null;
           if (mixer) {
             const action = mixer.clipAction(gltf.animations[0]);
@@ -111,25 +118,15 @@ export default function ARScene() {
             mixers.push(mixer);
           }
 
-          // raycast on click
-          const raycaster = new THREE.Raycaster();
-          const clickHandler = async (event: MouseEvent) => {
-            const rect = renderer.domElement.getBoundingClientRect();
-            const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-            const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-            raycaster.setFromCamera({ x, y }, camera as THREE.Camera);
-            const intersects = raycaster.intersectObject(gltf.scene, true);
-            if (intersects.length > 0) {
-              const res = await capturePoint(p.id);
-              updateScore(res.totalScore);
-              setOverlay({ show: true, points: res.earnedPoints, text: res.alreadyCaptured ? "Já capturado" : "Capturado!" });
-              setTimeout(() => setOverlay((o) => ({ ...o, show: false })), 1800);
-              gltf.scene.visible = false;
-            }
+          anchor.onTargetFound = () => {
+            setVisiblePoint((current) => {
+              if (capturedIdsRef.current.has(p.id)) return current;
+              return p;
+            });
           };
-          renderer.domElement.addEventListener("click", clickHandler);
+
           anchor.onTargetLost = () => {
-            renderer.domElement.removeEventListener("click", clickHandler);
+            setVisiblePoint((current) => (current?.id === p.id ? null : current));
           };
         }
 
@@ -160,13 +157,49 @@ export default function ARScene() {
       mindar?.renderer?.dispose();
       containerRef.current?.replaceChildren();
     };
-  }, [points, updateScore, started]);
+  }, [points, started]);
+
+  const handleCapture = async () => {
+    if (!visiblePoint || capturing || capturedIdsRef.current.has(visiblePoint.id)) return;
+    setCapturing(true);
+    try {
+      const res = await capturePoint(visiblePoint.id);
+      updateScore(res.totalScore);
+      const next = new Set(capturedIdsRef.current);
+      next.add(visiblePoint.id);
+      capturedIdsRef.current = next;
+      setCapturedIds(next);
+      const scene = sceneMapRef.current.get(visiblePoint.id);
+      if (scene) scene.visible = false;
+      setOverlay({
+        show: true,
+        points: res.earnedPoints,
+        text: res.alreadyCaptured ? "Já capturado" : "Capturado!",
+      });
+      setTimeout(() => setOverlay((o) => ({ ...o, show: false })), 2000);
+      setVisiblePoint(null);
+    } catch (e) {
+      console.error(e);
+      setError("Não foi possível registrar a captura. Tente novamente.");
+    } finally {
+      setCapturing(false);
+    }
+  };
 
   return (
     <div className="mt-4">
+      <div className="fixed top-4 right-4 z-20">
+        <div className="bg-slate-900/80 border border-accent/40 rounded-2xl px-4 py-2 shadow-lg backdrop-blur">
+          <p className="text-xs text-slate-300">Seus pontos</p>
+          <p className="text-2xl font-black text-accent drop-shadow">
+            {user?.totalScore ?? 0} <span className="text-sm font-semibold text-slate-200">pts</span>
+          </p>
+        </div>
+      </div>
+
       <div className="glass p-3 rounded-2xl mb-3">
         <p className="text-sm text-slate-200">
-          Aponte a câmera para as imagens-alvo. Toque no personagem para capturar. Já capturados não aparecem novamente.
+          Aponte a câmera para as imagens-alvo. Quando um robô estiver visível, o botão de captura aparece. Cada captura vale 1 ponto e não pode ser repetida.
         </p>
         {!started && <p className="text-sm text-amber-300 mt-2">Toque em "Iniciar AR" para liberar a câmera.</p>}
         {error && <p className="text-sm text-red-300 mt-2">{error}</p>}
@@ -205,6 +238,30 @@ export default function ARScene() {
       ) : (
         <div ref={containerRef} className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-transparent" />
       )}
+
+      <div className="fixed bottom-4 left-0 right-0 px-4 z-20 pointer-events-none">
+        <div className="flex flex-col gap-2 items-center">
+          <div className="min-h-[3rem] px-4 py-2 rounded-xl bg-slate-900/70 backdrop-blur border border-slate-700 text-center pointer-events-auto">
+            <p className="text-slate-200 text-sm">
+              {visiblePoint ? `Robô detectado: ${visiblePoint.name || visiblePoint.slug}` : "Nenhum robô na mira"}
+            </p>
+          </div>
+          <button
+            className={`pointer-events-auto w-full max-w-md bg-gradient-to-r from-accent to-primary text-white font-semibold py-3 rounded-xl shadow-[0_10px_40px_-12px_rgba(79,70,229,0.8)] transition hover:-translate-y-[1px] hover:shadow-[0_12px_45px_-10px_rgba(79,70,229,0.95)] active:translate-y-[1px] disabled:opacity-50 disabled:cursor-not-allowed`}
+            disabled={!visiblePoint || capturing || capturedIds.has(visiblePoint?.id ?? "")}
+            onClick={handleCapture}
+          >
+            {capturing
+              ? "Capturando..."
+              : !visiblePoint
+                ? "Aguarde um robô"
+                : capturedIds.has(visiblePoint.id)
+                  ? "Já capturado"
+                  : "Capturar robô"}
+          </button>
+        </div>
+      </div>
+
       <CaptureOverlay show={overlay.show} text={overlay.text} points={overlay.points} />
     </div>
   );
