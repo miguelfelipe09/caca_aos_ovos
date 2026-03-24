@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ARPoint, createPoint, getPoint, updatePoint } from "../services/pointsService";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { resolveAssetUrl } from "../utils/assetUrl";
 
 const emptyPoint: Partial<ARPoint> = {
   name: "",
@@ -51,7 +52,8 @@ export default function AdminEditPoint() {
   // Preview 3D simples para ajustar pose antes de testar na AR
   useEffect(() => {
     const container = previewRef.current;
-    if (!container || !data.modelUrl) return;
+    const modelUrl = resolveAssetUrl(data.modelUrl);
+    if (!container || !modelUrl) return;
 
     let renderer: THREE.WebGLRenderer | null = null;
     let scene: THREE.Scene | null = null;
@@ -80,7 +82,7 @@ export default function AdminEditPoint() {
 
     const loader = new GLTFLoader();
     loader.load(
-      data.modelUrl,
+      modelUrl,
       (gltf) => {
         const model = gltf.scene;
         model.position.set(data.posX ?? 0, data.posY ?? 0, data.posZ ?? 0);
@@ -95,7 +97,13 @@ export default function AdminEditPoint() {
         }
       },
       undefined,
-      (err) => console.error("Erro carregando modelo para preview", err)
+      (err) => {
+        console.error("Erro carregando modelo para preview", err);
+        const rawMessage = (err as any)?.message || "";
+        if (rawMessage.includes("Unexpected token '<'")) {
+          console.error("A URL do modelo retornou HTML em vez de GLTF/GLB:", modelUrl);
+        }
+      }
     );
 
     const clock = new THREE.Clock();

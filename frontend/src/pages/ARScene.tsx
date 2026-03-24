@@ -6,6 +6,7 @@ import { CaptureOverlay } from "../components/CaptureOverlay";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
+import { resolveAssetUrl } from "../utils/assetUrl";
 
 export default function ARScene() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -13,6 +14,7 @@ export default function ARScene() {
   const [started, setStarted] = useState(false);
   const [requesting, setRequesting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [modelErrors, setModelErrors] = useState<string[]>([]);
   const [overlay, setOverlay] = useState<{ show: boolean; points: number; text: string }>({
     show: false,
     points: 0,
@@ -32,6 +34,7 @@ export default function ARScene() {
   useEffect(() => {
     if (!containerRef.current || points.length === 0 || !started) return;
     setError(null);
+    setModelErrors([]);
     let stop = false;
     let mindar: any = null;
     let renderer: THREE.WebGLRenderer;
@@ -84,9 +87,19 @@ export default function ARScene() {
         const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
         scene.add(light);
 
+        const failedModels: string[] = [];
+
         for (const p of points) {
           const anchor = mindar.addAnchor(p.targetIndex ?? 0);
-          const gltf = await loadModel(p.modelUrl);
+          let gltf: any;
+          try {
+            gltf = await loadModel(p.modelUrl);
+          } catch (modelErr) {
+            const label = `${p.name || p.slug || p.id} (targetIndex ${p.targetIndex ?? 0})`;
+            failedModels.push(label);
+            console.error(`Falha ao carregar modelo do ponto ${label}:`, p.modelUrl, modelErr);
+            continue;
+          }
           gltf.scene.position.set(p.posX, p.posY, p.posZ);
           gltf.scene.rotation.set(p.rotX, p.rotY, p.rotZ);
           gltf.scene.scale.set(p.scaleX, p.scaleY, p.scaleZ);
@@ -118,6 +131,10 @@ export default function ARScene() {
           anchor.onTargetLost = () => {
             renderer.domElement.removeEventListener("click", clickHandler);
           };
+        }
+
+        if (failedModels.length > 0) {
+          setModelErrors(failedModels);
         }
 
         await mindar.start();
@@ -153,6 +170,11 @@ export default function ARScene() {
         </p>
         {!started && <p className="text-sm text-amber-300 mt-2">Toque em "Iniciar AR" para liberar a câmera.</p>}
         {error && <p className="text-sm text-red-300 mt-2">{error}</p>}
+        {modelErrors.length > 0 && (
+          <p className="text-sm text-amber-300 mt-2">
+            Modelos com erro: {modelErrors.join(", ")}
+          </p>
+        )}
       </div>
       {!started ? (
         <div className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-slate-900/40 flex items-center justify-center border border-slate-700">
@@ -191,5 +213,5 @@ export default function ARScene() {
 const loadModel = (url: string) =>
   new Promise<any>((resolve, reject) => {
     const loader = new GLTFLoader();
-    loader.load(url, resolve, undefined, reject);
+    loader.load(resolveAssetUrl(url), resolve, undefined, reject);
   });
