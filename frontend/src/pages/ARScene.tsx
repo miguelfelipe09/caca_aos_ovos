@@ -232,7 +232,7 @@ export default function ARScene() {
       )}
 
       {!started ? (
-        <div className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-slate-900/40 flex items-center justify-center border border-slate-700">
+        <div className="mindar-stage w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-slate-900/40 flex items-center justify-center border border-slate-700">
           <button
             className="bg-primary text-white px-6 py-3 rounded-lg shadow-lg"
             onClick={async () => {
@@ -258,7 +258,10 @@ export default function ARScene() {
           </button>
         </div>
       ) : (
-        <div ref={containerRef} className="w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden bg-transparent" />
+        <div
+          ref={containerRef}
+          className="mindar-stage relative w-full h-[calc(100vh-9.5rem)] rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/30"
+        />
       )}
 
       <div className="fixed bottom-4 left-0 right-0 px-4 z-20 pointer-events-none">
