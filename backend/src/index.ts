@@ -5,6 +5,8 @@ import express from "express";
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
+import https from "https";
+import fs from "fs";
 import authRoutes from "./routes/authRoutes.js";
 import arPointRoutes from "./routes/arPointRoutes.js";
 import captureRoutes from "./routes/captureRoutes.js";
@@ -39,8 +41,13 @@ app.get("*", (_req, res) => {
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 API running on port ${PORT}`);
+const httpsOptions = {
+  key: fs.readFileSync("/etc/ssl/certs/app/key.pem"),
+  cert: fs.readFileSync("/etc/ssl/certs/app/cert.pem"),
+};
+
+https.createServer(httpsOptions, app).listen(PORT, () => {
+  console.log(`🚀 HTTPS API running on port ${PORT}`);
 });
 
 process.on("SIGINT", async () => {
