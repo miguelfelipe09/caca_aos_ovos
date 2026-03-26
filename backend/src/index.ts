@@ -33,20 +33,19 @@ app.use("/auth", authRoutes);
 app.use("/ar-points", arPointRoutes);
 app.use("/captures", captureRoutes);
 
-// Serve frontend build for single-host deploy (e.g., ngrok free tier)
-app.use(express.static(distPath));
-app.get("*", (_req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
-});
+// app.use(express.static(distPath));
+// app.get("*", (_req, res) => {
+//   res.sendFile(path.join(distPath, "index.html"));
+// });
 
-const PORT = process.env.PORT || 4000;
+const PORT = parseInt(process.env.PORT || "4000", 10);
 
 const httpsOptions = {
   key: fs.readFileSync("/etc/ssl/certs/app/key.pem"),
   cert: fs.readFileSync("/etc/ssl/certs/app/cert.pem"),
 };
 
-https.createServer(httpsOptions, app).listen(PORT, () => {
+https.createServer(httpsOptions, app).listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 HTTPS API running on port ${PORT}`);
 });
 
