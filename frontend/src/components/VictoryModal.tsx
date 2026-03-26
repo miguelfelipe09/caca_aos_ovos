@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+﻿import { AnimatePresence, motion } from "framer-motion";
 
 interface Props {
   open: boolean;
@@ -29,16 +29,18 @@ export const VictoryModal = ({ open, onClose }: Props) => {
             <div className="absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-blue-500/20 blur-3xl" />
 
             <div className="relative p-7 sm:p-8">
-              <div className="mb-5 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200">
-                {"Vitória"}
-              </div>
-
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <div className="inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200">
+                  {"Vitória"}
+                </div>
                 <img
                   src="/logo-create-joy-top-border.png"
                   alt="CreateJoy"
-                  className="h-10 w-auto drop-shadow"
+                  className="h-8 w-auto drop-shadow"
                 />
+              </div>
+
+              <div className="mb-4 flex items-center gap-3">
                 <h2 className="text-3xl font-black leading-tight text-white sm:text-4xl">
                   {"Você capturou os 8 pokejoys!"}
                 </h2>
