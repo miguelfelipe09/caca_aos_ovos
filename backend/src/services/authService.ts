@@ -7,17 +7,29 @@ const prisma = new PrismaClient();
 export const register = async (data: {
   name: string;
   email: string;
+  phone: string;
   password: string;
   role?: Role;
 }): Promise<{ user: User; token: string }> => {
-  const existing = await prisma.user.findUnique({ where: { email: data.email } });
-  if (existing) throw new Error("Email already registered");
+  const cleanPhone = data.phone.replace(/\D/g, "");
+  if (!cleanPhone || cleanPhone.length < 10 || cleanPhone.length > 15) {
+    throw new Error("Phone must contain 10 to 15 digits");
+  }
+
+  const existing = await prisma.user.findFirst({
+    where: {
+      OR: [{ email: data.email }, { phone: cleanPhone }],
+    },
+  });
+  if (existing?.email === data.email) throw new Error("Email already registered");
+  if (existing?.phone === cleanPhone) throw new Error("Phone already registered");
 
   const passwordHash = await bcrypt.hash(data.password, 10);
   const user = await prisma.user.create({
     data: {
       name: data.name,
       email: data.email,
+      phone: cleanPhone,
       passwordHash,
       role: data.role || "USER",
     },

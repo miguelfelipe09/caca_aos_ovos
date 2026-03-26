@@ -11,6 +11,7 @@ async function main() {
     create: {
       name: "Admin",
       email: adminEmail,
+      phone: "0000000000",
       passwordHash: await bcrypt.hash("admin123", 10),
       role: "ADMIN",
     },

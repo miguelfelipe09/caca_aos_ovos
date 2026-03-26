@@ -16,6 +16,7 @@ model User {
   id           String   @id @default(uuid())
   name         String
   email        String   @unique
+  phone        String?  @unique
   passwordHash String
   role         Role     @default(USER)
   totalScore   Int      @default(0)
