@@ -30,21 +30,36 @@ export const VictoryModal = ({ open, onClose }: Props) => {
 
             <div className="relative p-7 sm:p-8">
               <div className="mb-5 inline-flex rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-cyan-200">
-                {"Vit\u00f3ria"}
+                {"Vitória"}
               </div>
 
-              <h2 className="text-3xl font-black leading-tight text-white sm:text-4xl">
-                {"Voc\u00ea capturou todos os pokejoys do Tropical"}
-              </h2>
+              <div className="mb-4 flex items-center gap-3">
+                <img
+                  src="/logo-create-joy-top-border.png"
+                  alt="CreateJoy"
+                  className="h-10 w-auto drop-shadow"
+                />
+                <h2 className="text-3xl font-black leading-tight text-white sm:text-4xl">
+                  {"Você capturou os 8 pokejoys!"}
+                </h2>
+              </div>
 
-              <p className="mt-4 text-base leading-relaxed text-slate-200">
-                {"Sua jornada terminou em grande estilo. Com 8 pontos, voc\u00ea encontrou cada pokejoy espalhado pela ca\u00e7a e completou o desafio tropical."}
+              <p className="mt-2 text-base leading-relaxed text-slate-200">
+                {"Prêmio desbloqueado: Valor da matrícula GRÁTIS na CreateJoy!"}
               </p>
 
-              <div className="mt-6 rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
-                <p className="text-sm uppercase tracking-[0.3em] text-slate-300">{"Pontua\u00e7\u00e3o final"}</p>
-                <p className="mt-2 text-5xl font-black text-cyan-300">8 pts</p>
-              </div>
+              <p className="mt-4 text-base text-cyan-100">
+                {"Agende sua visita:"}
+                <br />
+                <a
+                  href="https://wa.me/5537999113963"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent font-semibold underline underline-offset-4"
+                >
+                  https://wa.me/5537999113963
+                </a>
+              </p>
 
               <button
                 type="button"
