@@ -6,6 +6,7 @@ import { useAuthStore } from "../store/authStore";
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const { setAuth } = useAuthStore();
@@ -14,7 +15,7 @@ export default function Register() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      const res = await register({ name, email, password });
+      const res = await register({ name, email, phone, password });
       setAuth(res);
       navigate("/");
     } catch (err: any) {
@@ -37,6 +38,12 @@ export default function Register() {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+        />
+        <input
+          className="w-full px-3 py-2 rounded bg-slate-800 border border-slate-700"
+          placeholder="Telefone (somente números)"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
         />
         <input
           type="password"

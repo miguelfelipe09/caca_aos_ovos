@@ -1,7 +1,12 @@
 import { api } from "./api";
 import { User } from "../store/authStore";
 
-export const register = async (data: { name: string; email: string; password: string }) => {
+export const register = async (data: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+}) => {
   const res = await api.post<{ token: string; user: User }>("/auth/register", data);
   return res.data;
 };

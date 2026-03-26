@@ -20,7 +20,24 @@ const frontendOrigin = process.env.FRONTEND_ORIGIN?.trim();
 const corsOptions: cors.CorsOptions = {
   origin: frontendOrigin || true,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "ngrok-skip-browser-warning",
+    "cache-control",
+    "Cache-Control",
+    "pragma",
+    "Pragma",
+    "accept",
+    "Accept",
+    "accept-language",
+    "Accept-Language",
+    "origin",
+    "Origin",
+    "x-requested-with",
+    "X-Requested-With",
+  ],
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
