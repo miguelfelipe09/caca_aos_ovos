@@ -4,6 +4,19 @@ const prisma = new PrismaClient();
 const normalizeModelKey = (value?: string | null) => value?.trim().toLowerCase() || "";
 const MAX_CAPTURE_RETRIES = 2;
 
+const formatPrismaError = (error: unknown) => {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) {
+    return null;
+  }
+
+  return {
+    code: error.code,
+    meta: error.meta,
+    clientVersion: error.clientVersion,
+    name: error.name,
+  };
+};
+
 const findExistingCapture = async (userId: string, arPointId: string, modelUrl: string) => {
   const captures = await prisma.capture.findMany({
     where: { userId },
@@ -35,19 +48,38 @@ export const recordCapture = async ({
   userId: string;
   arPointId: string;
 }) => {
+  console.info("[capture-service] start", { userId, arPointId });
+
   const point = await prisma.aRPoint.findUnique({ where: { id: arPointId } });
   if (!point || !point.isActive) {
+    console.warn("[capture-service] point not available", {
+      userId,
+      arPointId,
+      pointFound: Boolean(point),
+      isActive: point?.isActive ?? null,
+    });
     throw new Error("AR point not found or inactive");
   }
 
   for (let attempt = 0; attempt < MAX_CAPTURE_RETRIES; attempt += 1) {
     try {
+      console.info("[capture-service] transaction attempt", {
+        userId,
+        arPointId,
+        attempt: attempt + 1,
+      });
+
       return await prisma.$transaction(
         async (tx) => {
           const exists = await tx.capture.findUnique({
             where: { userId_arPointId: { userId, arPointId } },
           });
           if (exists) {
+            console.info("[capture-service] duplicate by arPointId", {
+              userId,
+              arPointId,
+              totalScore: exists.totalScoreAfter,
+            });
             return {
               alreadyCaptured: true,
               earnedPoints: 0,
@@ -72,6 +104,13 @@ export const recordCapture = async ({
           );
 
           if (duplicateModelCapture) {
+            console.info("[capture-service] duplicate by modelUrl", {
+              userId,
+              arPointId,
+              duplicateArPointId: duplicateModelCapture.arPointId,
+              modelUrl: point.modelUrl,
+              totalScore: duplicateModelCapture.totalScoreAfter,
+            });
             return {
               alreadyCaptured: true,
               earnedPoints: 0,
@@ -94,6 +133,14 @@ export const recordCapture = async ({
             },
           });
 
+          console.info("[capture-service] capture persisted", {
+            userId,
+            arPointId,
+            captureId: capture.id,
+            earnedPoints: point.points,
+            totalScore: capture.totalScoreAfter,
+          });
+
           return {
             success: true,
             alreadyCaptured: false,
@@ -105,12 +152,26 @@ export const recordCapture = async ({
         { isolationLevel: Prisma.TransactionIsolationLevel.Serializable }
       );
     } catch (error) {
+      console.warn("[capture-service] transaction failed", {
+        userId,
+        arPointId,
+        attempt: attempt + 1,
+        message: error instanceof Error ? error.message : String(error),
+        prisma: formatPrismaError(error),
+      });
+
       if (!isCaptureConflictError(error)) {
         throw error;
       }
 
       const existingCapture = await findExistingCapture(userId, arPointId, point.modelUrl);
       if (existingCapture) {
+        console.info("[capture-service] conflict resolved with existing capture", {
+          userId,
+          arPointId,
+          existingArPointId: existingCapture.arPointId,
+          totalScore: existingCapture.totalScoreAfter,
+        });
         return {
           alreadyCaptured: true,
           earnedPoints: 0,
@@ -124,6 +185,11 @@ export const recordCapture = async ({
         error.code === "P2034" &&
         attempt < MAX_CAPTURE_RETRIES - 1
       ) {
+        console.info("[capture-service] retrying after serialization conflict", {
+          userId,
+          arPointId,
+          nextAttempt: attempt + 2,
+        });
         continue;
       }
 
@@ -131,6 +197,7 @@ export const recordCapture = async ({
     }
   }
 
+  console.error("[capture-service] retries exhausted", { userId, arPointId });
   throw new Error("Failed to record capture");
 };
 

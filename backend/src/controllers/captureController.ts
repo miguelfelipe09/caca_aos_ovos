@@ -5,13 +5,30 @@ import { AuthRequest } from "../middleware/authMiddleware.js";
 export const capture = async (req: AuthRequest, res: Response) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
   const { arPointId } = req.body;
+  console.info("[capture] request received", {
+    userId: req.user.id,
+    arPointId,
+  });
   try {
     const result = await service.recordCapture({
       userId: req.user.id,
       arPointId,
     });
+    console.info("[capture] request completed", {
+      userId: req.user.id,
+      arPointId,
+      alreadyCaptured: result.alreadyCaptured,
+      earnedPoints: result.earnedPoints,
+      totalScore: result.totalScore,
+    });
     res.json(result);
   } catch (error: any) {
+    console.error("[capture] request failed", {
+      userId: req.user.id,
+      arPointId,
+      message: error?.message,
+      stack: error?.stack,
+    });
     res.status(400).json({ message: error.message });
   }
 };
