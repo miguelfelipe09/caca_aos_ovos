@@ -42,7 +42,7 @@ export const VictoryModal = ({ open, onClose }: Props) => {
 
               <div className="mb-4 flex items-center gap-3">
                 <h2 className="text-3xl font-black leading-tight text-white sm:text-4xl">
-                  {"Você capturou os 8 pokejoys!"}
+                  {"Você capturou os 4 pokejoys!"}
                 </h2>
               </div>
 

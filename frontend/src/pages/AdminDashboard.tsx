@@ -38,7 +38,7 @@ export default function AdminDashboard() {
     try {
       const updatedUser = await adjustScoreForTesting(delta);
       updateScore(updatedUser.totalScore);
-      if (updatedUser.totalScore < 8) {
+      if (updatedUser.totalScore < 4) {
         clearVictoryModalSession();
       }
       setTestingMessage(`Pontuação atualizada para ${updatedUser.totalScore} pts.`);

@@ -9,7 +9,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { MindARThree } from "mind-ar/dist/mindar-image-three.prod.js";
 import { resolveAssetUrl } from "../utils/assetUrl";
 
-const VICTORY_SCORE = 8;
+const VICTORY_SCORE = 4;
 
 export default function ARScene() {
   const containerRef = useRef<HTMLDivElement>(null);
