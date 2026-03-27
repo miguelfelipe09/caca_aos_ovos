@@ -149,12 +149,12 @@ export default function ARScene() {
       } catch (fetchErr) {
         console.error("Erro baixando targets.mind", fetchErr);
         const detail = fetchErr instanceof Error ? fetchErr.message : String(fetchErr);
-        setError(`Não foi possível baixar targets.mind (${detail}).`);
+        setError(`NÃ£o foi possÃ­vel baixar targets.mind (${detail}).`);
         return;
       }
 
       if (!targetSrcRef.current) {
-        setError("targets.mind não disponível.");
+        setError("targets.mind nÃ£o disponÃ­vel.");
         return;
       }
 
@@ -233,7 +233,7 @@ export default function ARScene() {
       console.error(e);
       cleanupAR();
       setStarted(false);
-      setError("Não foi possível iniciar a câmera/AR. Verifique permissões e tente novamente.");
+      setError("NÃ£o foi possÃ­vel iniciar a cÃ¢mera/AR. Verifique permissÃµes e tente novamente.");
     } finally {
       setRequesting(false);
     }
@@ -254,7 +254,7 @@ export default function ARScene() {
       setOverlay({
         show: true,
         points: res.earnedPoints,
-        text: res.alreadyCaptured ? "Já capturado" : "Capturado!",
+        text: res.alreadyCaptured ? "JÃ¡ capturado" : "Capturado!",
       });
       if (!res.alreadyCaptured && res.totalScore >= VICTORY_SCORE) {
         openVictoryModal();
@@ -263,7 +263,7 @@ export default function ARScene() {
       setVisiblePoint(null);
     } catch (e) {
       console.error(e);
-      setError("Não foi possível registrar a captura. Tente novamente.");
+      setError("NÃ£o foi possÃ­vel registrar a captura. Tente novamente.");
     } finally {
       setCapturing(false);
     }
@@ -300,7 +300,7 @@ export default function ARScene() {
               onClick={startAR}
               disabled={points.length === 0 || requesting}
             >
-              {points.length === 0 ? "Carregando pontos..." : requesting ? "Solicitando câmera..." : "Iniciar AR"}
+              {points.length === 0 ? "Carregando pontos..." : requesting ? "Solicitando cÃ¢mera..." : "Iniciar AR"}
             </button>
           </div>
         )}
@@ -323,7 +323,7 @@ export default function ARScene() {
               : !visiblePoint
                 ? "Aguarde um pokejoy"
                 : capturedIds.has(visiblePoint.id)
-                  ? "Já capturado"
+                  ? "JÃ¡ capturado"
                   : "Capturar pokejoy"}
           </button>
         </div>
