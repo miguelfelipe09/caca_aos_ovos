@@ -8,6 +8,7 @@ import RankingPage from "./pages/Ranking";
 import HistoryPage from "./pages/History";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminEditPoint from "./pages/AdminEditPoint";
+import AdminUsers from "./pages/AdminUsers";
 import { ProtectedRoute, AdminRoute } from "./components/ProtectedRoute";
 
 function App() {
@@ -29,6 +30,14 @@ function App() {
           element={
             <AdminRoute>
               <AdminDashboard />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsers />
             </AdminRoute>
           }
         />

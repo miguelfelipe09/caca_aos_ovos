@@ -73,9 +73,14 @@ export default function AdminDashboard() {
     <div className="mt-8 space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-accent">Dashboard Admin</h1>
-        <Link to="/admin/points/new" className="rounded bg-primary px-4 py-2 text-white">
-          Novo ponto
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/admin/users" className="rounded bg-slate-700 px-4 py-2 text-white">
+            Usuários
+          </Link>
+          <Link to="/admin/points/new" className="rounded bg-primary px-4 py-2 text-white">
+            Novo ponto
+          </Link>
+        </div>
       </div>
 
       <div className="glass rounded-3xl p-5">

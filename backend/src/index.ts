@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import authRoutes from "./routes/authRoutes.js";
 import arPointRoutes from "./routes/arPointRoutes.js";
 import captureRoutes from "./routes/captureRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
 import { PrismaClient } from "@prisma/client";
 
 const app = express();
@@ -47,6 +48,7 @@ app.use(express.json());
 app.use("/auth", authRoutes);
 app.use("/ar-points", arPointRoutes);
 app.use("/captures", captureRoutes);
+app.use("/users", userRoutes);
 
 // app.use(express.static(distPath));
 // app.get("*", (_req, res) => {
